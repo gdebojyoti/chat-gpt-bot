@@ -1,9 +1,9 @@
-import { Configuration, OpenAIApi } from "openai";
+import { Configuration, OpenAIApi } from 'openai'
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
-});
-const openai = new OpenAIApi(configuration);
+})
+const openai = new OpenAIApi(configuration)
 
 const conversation = []
 
@@ -11,20 +11,20 @@ export default async function (req, res) {
   if (!configuration.apiKey) {
     res.status(500).json({
       error: {
-        message: "OpenAI API key not configured, please follow instructions in README.md",
+        message: 'OpenAI API key not configured, please follow instructions in README.md',
       }
-    });
-    return;
+    })
+    return
   }
 
-  const content = req.body.input || '';
+  const content = req.body.input || ''
   if (content.trim().length === 0) {
     res.status(400).json({
       error: {
-        message: "Please enter a valid message",
+        message: 'Please enter a valid message',
       }
-    });
-    return;
+    })
+    return
   }
 
   try {
@@ -32,7 +32,7 @@ export default async function (req, res) {
     if (isUserBanned()) {
       res.status(400).json({
         error: {
-          message: "You are not allowed to use this API",
+          message: 'You are not allowed to use this API',
         }
       })
       return
@@ -42,33 +42,33 @@ export default async function (req, res) {
     updateConversation({content, isBot: false})
     
     const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
+      model: 'gpt-3.5-turbo',
       // max_tokens: 100,
       messages: [
         ...conversation,
         { role: 'user', content }
       ],
       temperature: 0,
-    });
+    })
     const result = completion.data.choices[0].message.content
 
     // add message to conversation
     updateConversation({content: result, isBot: true})
 
     // return the result
-    res.status(200).json({ result, full: completion.data.choices });
+    res.status(200).json({ result, full: completion.data.choices })
   } catch(error) {
     // Consider adjusting the error handling logic for your use case
     if (error.response) {
-      console.error(error.response.status, error.response.data);
-      res.status(error.response.status).json(error.response.data);
+      console.error(error.response.status, error.response.data)
+      res.status(error.response.status).json(error.response.data)
     } else {
-      console.error(`Error with OpenAI API request: ${error.message}`);
+      console.error(`Error with OpenAI API request: ${error.message}`)
       res.status(500).json({
         error: {
           message: 'An error occurred during your request.',
         }
-      });
+      })
     }
   }
 }
