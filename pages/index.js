@@ -2,7 +2,7 @@ import Head from 'next/head'
 import { useState } from 'react'
 import styles from './index.module.css'
 
-export default function Home() {
+const Home = () => {
   const [inputMessage, setInputMessage] = useState('')
   const [result, setResult] = useState()
 
@@ -56,3 +56,5 @@ export default function Home() {
     </div>
   )
 }
+
+export default Home
