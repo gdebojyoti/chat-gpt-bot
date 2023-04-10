@@ -18,6 +18,7 @@ export default async function (req, res) {
   }
 
   const content = req.body.input || ''
+  // validate input
   if (content.trim().length === 0) {
     res.status(400).json({
       error: {
@@ -42,8 +43,8 @@ export default async function (req, res) {
     updateConversation({content, isBot: false})
     
     const completion = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo',
-      // max_tokens: 100,
+      model: 'gpt-3.5-turbo', // NOTE: model can be made dependent on user's package
+      // max_tokens: 100, // NOTE: max_tokens can be made dependent on user's package
       messages: [
         ...conversation,
         { role: 'user', content }
@@ -81,6 +82,7 @@ function updateConversation ({content, isBot}) {
   })
 
   // remove oldest message if there are more than 10 messages
+  // NOTE: MAX_CONVERSATION_LENGTH can be made dependent on user's package
   if (conversation.length > (process.env.MAX_CONVERSATION_LENGTH || 10)) {
     conversation.shift()
   }
