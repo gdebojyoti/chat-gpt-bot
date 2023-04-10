@@ -5,6 +5,8 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
+const conversation = []
+
 export default async function (req, res) {
   if (!configuration.apiKey) {
     res.status(500).json({
@@ -15,33 +17,46 @@ export default async function (req, res) {
     return;
   }
 
-  const animal = req.body.animal || '';
-  if (animal.trim().length === 0) {
+  const content = req.body.input || '';
+  if (content.trim().length === 0) {
     res.status(400).json({
       error: {
-        message: "Please enter a valid animal",
+        message: "Please enter a valid message",
       }
     });
     return;
   }
 
   try {
-    // const completion = await openai.createCompletion({
+    // exit if user is not allowed
+    if (isUserBanned()) {
+      res.status(400).json({
+        error: {
+          message: "You are not allowed to use this API",
+        }
+      })
+      return
+    }
+
+    // add message to conversation
+    updateConversation({content, isBot: false})
+    
     const completion = await openai.createChatCompletion({
-      // model: "text-davinci-003",
       model: "gpt-3.5-turbo",
-      // prompt: animal || 'Hello. Who are you?',
-      // prompt: generatePrompt(animal),
       // max_tokens: 100,
       messages: [
-        // {"role": "user", "content": "who won the last fifa world cup?"},
-        // {"role": "assistant", "content": "France won the last FIFA World Cup in 2018."},
-        { role: 'user', content: animal }
+        ...conversation,
+        { role: 'user', content }
       ],
       temperature: 0,
     });
-    res.status(200).json({ result: completion.data.choices[0].message.content, full: completion.data.choices });
-    // res.status(200).json({ result: completion.data.choices[0].text, full: completion.data.choices });
+    const result = completion.data.choices[0].message.content
+
+    // add message to conversation
+    updateConversation({content: result, isBot: true})
+
+    // return the result
+    res.status(200).json({ result, full: completion.data.choices });
   } catch(error) {
     // Consider adjusting the error handling logic for your use case
     if (error.response) {
@@ -58,15 +73,20 @@ export default async function (req, res) {
   }
 }
 
-function generatePrompt(animal) {
-  const capitalizedAnimal =
-    animal[0].toUpperCase() + animal.slice(1).toLowerCase();
-  return `Suggest three names for an animal that is a superhero.
+function updateConversation ({content, isBot}) {
+  // add the latest message to the conversation
+  conversation.push({
+    role: isBot ? 'assistant' : 'user',
+    content
+  })
 
-Animal: Cat
-Names: Captain Sharpclaw, Agent Fluffball, The Incredible Feline
-Animal: Dog
-Names: Ruff the Protector, Wonder Canine, Sir Barks-a-Lot
-Animal: ${capitalizedAnimal}
-Names:`;
+  // remove oldest message if there are more than 10 messages
+  if (conversation.length > (process.env.MAX_CONVERSATION_LENGTH || 10)) {
+    conversation.shift()
+  }
+}
+
+// this method will later be updated to include logic such as whitelisting, blacklisting, API usages, etc.
+function isUserBanned () {
+  return false
 }
