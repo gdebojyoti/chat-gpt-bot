@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start:prod": "next start",
+    "start": "pm2 start npm --name \"chatgpt\" -- start:prod"
   },
   "dependencies": {
     "next": "^13.1.1",
