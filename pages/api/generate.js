@@ -8,6 +8,7 @@ const openai = new OpenAIApi(configuration)
 const conversation = []
 
 export default async function (req, res) {
+  console.log("logged everytime!")
   if (!configuration.apiKey) {
     res.status(500).json({
       error: {
