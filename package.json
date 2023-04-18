@@ -6,7 +6,7 @@
     "dev": "next dev -p 4001",
     "build": "next build",
     "start:prod": "next start",
-    "start": "pm2 start npm --name \"chatgpt\" -- run start:prod"
+    "start": "pm2 start npm --name \"chatgpt\" -- run start:prod -- time 5000"
   },
   "dependencies": {
     "next": "^13.1.1",
